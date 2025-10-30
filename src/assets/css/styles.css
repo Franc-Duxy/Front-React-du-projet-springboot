@@ -1,0 +1,123 @@
+/* /src/assets/css/styles.css */
+
+/* Styles globaux pour le layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Styles pour la Sidebar (Bootstrap + personnalisation) */
+.sidebar {
+  width: 230px;
+  min-height: 100vh;
+  background: linear-gradient(20deg, #193072 10%, #040c20 100%) !important; /* Ton dégradé */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); /* Ombre moderne */
+}
+
+.sidebar h2 {
+  color: #ffffff !important; /* Texte blanc */
+}
+
+.nav-link {
+  color: #ecf0f1 !important; /* Texte clair */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-link:hover {
+  background-color: rgba(25, 48, 114, 0.8) !important; /* Effet hover bord à bord */
+  color: #ffffff !important; /* Texte blanc au survol */
+}
+
+.sidebar-icon {
+  color: #b3c6ff !important; /* Bleu clair pour les icônes */
+  font-size: 1.2em;
+}
+
+.menu-icon {
+  color: #b3c6ff !important; /* Bleu clair pour l’icône hamburger */
+  font-size: 1.4em;
+}
+
+/* Styles pour le contenu principal */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #e6ebf5;
+}
+
+/* Styles pour la Navbar (Bootstrap + personnalisation) */
+.navbar {
+  background-color: #f7f9fc !important;
+  border-bottom: 1px solid #d1d9e6 !important;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.navbar-brand {
+  color: #193072 !important;
+  font-size: 1.2em !important;
+}
+
+.btn-outline-primary {
+  border-color: #193072 !important;
+  color: #193072 !important;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-outline-primary:hover {
+  background-color: #193072 !important;
+  color: #ffffff !important;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.85em !important;
+}
+
+/* Styles pour Produit */
+.produit-page {
+  padding: 20px;
+}
+
+.produit-page h2 {
+  font-size: 1.8em;
+  color: #193072;
+  margin-bottom: 20px;
+}
+
+/* Styles pour Commande */
+.commande-page {
+  padding: 20px;
+}
+
+.commande-page h2 {
+  font-size: 1.8em;
+  color: #193072;
+  margin-bottom: 20px;
+}
+
+/* Styles pour Utilisateur */
+.utilisateur-page {
+  padding: 20px;
+}
+
+.utilisateur-page h2 {
+  font-size: 1.8em;
+  color: #193072;
+  margin-bottom: 20px;
+}
+
+/* Styles pour Paiement */
+.paiement-page {
+  padding: 20px;
+}
+
+.paiement-page h2 {
+  font-size: 1.8em;
+  color: #193072;
+  margin-bottom: 20px;
+}
+
+.modal-backdrop.show {
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.3);
+}

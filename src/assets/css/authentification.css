@@ -1,0 +1,12 @@
+/* Styles personnalisés pour la page de login */
+.card-title {
+  color: #193072; /* Garde ton bleu personnalisé pour le titre */
+  font-weight: 700;
+}
+
+/* Ajoute un léger fond dégradé à la page */
+body {
+  background: linear-gradient(135deg, #193072 0%, #e6ebf5 100%);
+}
+
+/* Si tu veux personnaliser autre chose */
