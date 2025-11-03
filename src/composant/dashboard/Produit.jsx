@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { getAllProduits, ajouterProduit, modifierProduit, supprimerProduit } from "../../services/api.js";
+import {
+  getAllProduits,
+  ajouterProduit,
+  modifierProduit,
+  supprimerProduit,
+} from "../../services/api.js";
 import DataTable from "react-data-table-component";
 import { Modal, Form, Button, Card } from "react-bootstrap";
 import { BsPlusCircleFill } from "react-icons/bs";
@@ -36,7 +41,11 @@ function Produit() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [newProduit, setNewProduit] = useState({ nom: "", prix: "", stock: "" });
+  const [newProduit, setNewProduit] = useState({
+    nom: "",
+    prix: "",
+    stock: "",
+  });
   const [produitSelectionne, setProduitSelectionne] = useState({
     idProduit: "",
     nom: "",
@@ -52,7 +61,9 @@ function Produit() {
     setLoading(true);
     getAllProduits()
       .then((response) => {
-        const sortedProduits = response.data.sort((a, b) => a.idProduit - b.idProduit);
+        const sortedProduits = response.data.sort(
+          (a, b) => a.idProduit - b.idProduit
+        );
         setProduits(sortedProduits);
         setError(null);
       })
@@ -60,7 +71,9 @@ function Produit() {
         console.error("Erreur fetchProduits:", err);
         Swal.fire({
           title: "Erreur",
-          text: "Impossible de charger les produits : " + (err.response?.data?.message || err.message),
+          text:
+            "Impossible de charger les produits : " +
+            (err.response?.data?.message || err.message),
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -88,10 +101,13 @@ function Produit() {
 
     if (formValues) {
       try {
-        const response = await axios.post("http://localhost:9090/api/utilisateur/verifier-admin", {
-          email: formValues.email,
-          mdp: formValues.mdp,
-        });
+        const response = await axios.post(
+          "http://localhost:9090/api/utilisateur/verifier-admin",
+          {
+            email: formValues.email,
+            mdp: formValues.mdp,
+          }
+        );
         return response.data.valid;
       } catch (error) {
         Swal.fire("Erreur", "Erreur lors de la vérification", error);
@@ -101,18 +117,56 @@ function Produit() {
     return false;
   };
 
+  // Contrôle pour l'ajout
   const handleChangeAjout = (e) => {
-    setNewProduit({ ...newProduit, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Pour le prix : autorise uniquement les chiffres et le point décimal
+    if (name === "prix") {
+      const normalizedValue = value.replace(",", ".");
+      const regexPrix = /^[0-9]*[.]?[0-9]*$/;
+      if (!regexPrix.test(normalizedValue)) return;
+      setNewProduit({ ...newProduit, [name]: normalizedValue });
+      return;
+    }
+
+    // Pour le stock : autorise uniquement les chiffres entiers
+    if (name === "stock") {
+      const regexStock = /^[0-9]*$/;
+      if (!regexStock.test(value)) return;
+    }
+
+    setNewProduit({ ...newProduit, [name]: value });
   };
 
+  // Contrôle pour la modification
   const handleChangeModif = (e) => {
-    setProduitSelectionne({ ...produitSelectionne, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "prix") {
+      const normalizedValue = value.replace(",", ".");
+      const regexPrix = /^[0-9]*[.]?[0-9]*$/;
+      if (!regexPrix.test(normalizedValue)) return;
+      setNewProduit({ ...newProduit, [name]: normalizedValue });
+      return;
+    }
+
+    if (name === "stock") {
+      const regexStock = /^[0-9]*$/;
+      if (!regexStock.test(value)) return;
+    }
+
+    setProduitSelectionne({ ...produitSelectionne, [name]: value });
   };
 
   const handleSelectProduit = async (produit) => {
     const isAdminValid = await verifierAdmin();
     if (!isAdminValid) {
-      Swal.fire("Accès refusé", "Mot de passe admin incorrect ou annulé", "error");
+      Swal.fire(
+        "Accès refusé",
+        "Mot de passe admin incorrect ou annulé",
+        "error"
+      );
       return;
     }
     setProduitSelectionne({
@@ -138,7 +192,11 @@ function Produit() {
   const handleShowAjout = async () => {
     const isAdminValid = await verifierAdmin();
     if (!isAdminValid) {
-      Swal.fire("Accès refusé", "Mot de passe admin incorrect ou annulé", "error");
+      Swal.fire(
+        "Accès refusé",
+        "Mot de passe admin incorrect ou annulé",
+        "error"
+      );
       return;
     }
     setShowModalAjout(true);
@@ -176,7 +234,9 @@ function Produit() {
         console.error("Erreur handleAjouterProduit:", err);
         Swal.fire({
           title: "Erreur",
-          text: "Erreur lors de l'ajout du produit : " + (err.response?.data?.message || err.message),
+          text:
+            "Erreur lors de l'ajout du produit : " +
+            (err.response?.data?.message || err.message),
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -190,7 +250,11 @@ function Produit() {
       stock: parseInt(produitSelectionne.stock, 10) || 0,
     };
 
-    if (!produitToUpdate.nom || produitToUpdate.prix < 0 || produitToUpdate.stock < 0) {
+    if (
+      !produitToUpdate.nom ||
+      produitToUpdate.prix < 0 ||
+      produitToUpdate.stock < 0
+    ) {
       Swal.fire({
         title: "Erreur",
         text: "Veuillez remplir tous les champs avec des valeurs valides (nom non vide, prix et stock >= 0).",
@@ -212,10 +276,15 @@ function Produit() {
         handleCloseModif();
       })
       .catch((err) => {
-        console.error("Erreur handleModifierProduit:", err.response ? err.response : err);
+        console.error(
+          "Erreur handleModifierProduit:",
+          err.response ? err.response : err
+        );
         Swal.fire({
           title: "Erreur",
-          text: "Erreur lors de la modification du produit : " + (err.response?.data?.message || err.message),
+          text:
+            "Erreur lors de la modification du produit : " +
+            (err.response?.data?.message || err.message),
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -225,7 +294,11 @@ function Produit() {
   const handleSupprimerProduit = async (id) => {
     const isAdminValid = await verifierAdmin();
     if (!isAdminValid) {
-      Swal.fire("Accès refusé", "Mot de passe admin incorrect ou annulé", "error");
+      Swal.fire(
+        "Accès refusé",
+        "Mot de passe admin incorrect ou annulé",
+        "error"
+      );
       return;
     }
 
@@ -251,10 +324,15 @@ function Produit() {
             fetchProduits();
           })
           .catch((err) => {
-            console.error("Erreur handleSupprimerProduit:", err.response ? err.response : err);
+            console.error(
+              "Erreur handleSupprimerProduit:",
+              err.response ? err.response : err
+            );
             Swal.fire({
               title: "Erreur",
-              text: "Erreur lors de la suppression du produit : " + (err.response?.data?.message || err.message),
+              text:
+                "Erreur lors de la suppression du produit : " +
+                (err.response?.data?.message || err.message),
               icon: "error",
               confirmButtonText: "OK",
             });
@@ -264,18 +342,36 @@ function Produit() {
   };
 
   const columns = [
-    { name: "ID", selector: (row) => row.idProduit, sortable: true, center: true },
+    {
+      name: "ID",
+      selector: (row) => row.idProduit,
+      sortable: true,
+      center: true,
+    },
     { name: "Nom", selector: (row) => row.nom, sortable: true, center: true },
     { name: "Prix", selector: (row) => row.prix, sortable: true, center: true },
-    { name: "Stock", selector: (row) => row.stock, sortable: true, center: true },
+    {
+      name: "Stock",
+      selector: (row) => row.stock,
+      sortable: true,
+      center: true,
+    },
     {
       name: "Action",
       cell: (row) => (
         <div className="d-flex gap-2 justify-content-center">
-          <Button variant="warning" size="sm" onClick={() => handleSelectProduit(row)}>
+          <Button
+            variant="warning"
+            size="sm"
+            onClick={() => handleSelectProduit(row)}
+          >
             <FaEdit />
           </Button>
-          <Button variant="danger" size="sm" onClick={() => handleSupprimerProduit(row.idProduit)}>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => handleSupprimerProduit(row.idProduit)}
+          >
             <FaTrash />
           </Button>
         </div>
@@ -293,7 +389,7 @@ function Produit() {
           <div className="d-flex gap-2 align-items-center">
             <Form.Control
               type="text"
-              placeholder="Rechercher..."
+              placeholder="Rechercher par nom "
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ width: "200px" }}
@@ -306,7 +402,9 @@ function Produit() {
         <Card.Body>
           <DataTable
             columns={columns}
-            data={produits.filter((p) => p.nom.toLowerCase().includes(searchTerm.toLowerCase()))}
+            data={produits.filter((p) =>
+              p.nom.toLowerCase().includes(searchTerm.toLowerCase())
+            )}
             pagination
             highlightOnHover
             customStyles={customStyles}

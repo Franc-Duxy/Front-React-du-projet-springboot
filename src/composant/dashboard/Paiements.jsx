@@ -198,7 +198,7 @@ const Paiements = () => {
           <div className="d-flex gap-2 align-items-center">
             <Form.Control
               type="text"
-              placeholder="Rechercher..."
+              placeholder="Rechercher par id..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ width: "200px" }}

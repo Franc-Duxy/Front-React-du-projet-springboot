@@ -7,12 +7,11 @@ import "../../assets/css/authentification.css";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👁️ état pour voir/masquer
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log("Tentative de connexion avec:", { email, password });
 
     try {
       const response = await axios.post("http://localhost:9090/api/utilisateur/login", {
@@ -20,19 +19,13 @@ function Login() {
         mdp: password,
       });
 
-      console.log("Réponse du backend:", response.data);
-
       if (response.data.success) {
-        // 🔹 Extraire l'utilisateur correctement (note: c’est id, pas idUtilisateur)
         const utilisateur = response.data.utilisateur;
 
-        // ✅ Enregistrer les infos utilisateur dans le localStorage
         localStorage.setItem("user", JSON.stringify(utilisateur));
-        localStorage.setItem("userId", utilisateur.id); // ✅ Correction ici
+        localStorage.setItem("userId", utilisateur.id);
         localStorage.setItem("userRole", utilisateur.role);
         localStorage.setItem("userName", utilisateur.nom);
-
-        console.log("🧠 userId enregistré :", utilisateur.id);
 
         Swal.fire({
           title: "Connexion réussie",
@@ -41,13 +34,12 @@ function Login() {
           timer: 1500,
           showConfirmButton: false,
         }).then(() => {
-          navigate("/produit"); // ou "/commande" selon ta logique
+          navigate("/produit");
         });
       } else {
         throw new Error(response.data.message || "Identifiants incorrects");
       }
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
       Swal.fire({
         title: "Erreur",
         text:
@@ -67,6 +59,7 @@ function Login() {
           <div className="card-body">
             <h1 className="card-title text-center mb-4">SmartCaisse</h1>
             <form onSubmit={handleSubmit}>
+              {/* Champ email */}
               <div className="mb-3">
                 <label htmlFor="email" className="form-label">
                   Email
@@ -81,20 +74,34 @@ function Login() {
                   required
                 />
               </div>
-              <div className="mb-3">
+
+              {/* Champ mot de passe */}
+              <div className="mb-3 position-relative">
                 <label htmlFor="password" className="form-label">
                   Mot de passe
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  className="form-control"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Entrez votre mot de passe"
-                  required
-                />
+                <div className="input-group">
+                  <input
+                    type={showPassword ? "text" : "password"} // 👁️ bascule ici
+                    id="password"
+                    className="form-control"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Entrez votre mot de passe"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)} // 🔁 toggle
+                    tabIndex={-1}
+                  >
+                    {showPassword ? "🔒" : "👁️"}
+                  </button>
+                </div>
               </div>
+
+              {/* Bouton de connexion */}
               <button type="submit" className="btn btn-primary w-100">
                 Connexion
               </button>
