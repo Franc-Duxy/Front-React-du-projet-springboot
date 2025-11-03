@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+// cspell:disable  ← Désactive le correcteur orthographique pour ce fichier
+
+import { useState, useEffect } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
-import { Modal, Form, Button, Card } from "react-bootstrap";
+import { Modal, Form, Button, Card, InputGroup } from "react-bootstrap";
 import { BsPlusCircleFill } from "react-icons/bs";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye, FaEyeSlash } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 const Utilisateur = () => {
@@ -12,6 +14,7 @@ const Utilisateur = () => {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [currentUtilisateur, setCurrentUtilisateur] = useState({
     idUtilisateur: null,
     nom: "",
@@ -26,14 +29,18 @@ const Utilisateur = () => {
 
   const fetchUtilisateurs = async () => {
     try {
-      const response = await axios.get("http://localhost:9090/api/utilisateur/tous");
-      const sortedData = response.data.sort((a, b) => a.idUtilisateur - b.idUtilisateur);
+      const response = await axios.get(
+        "http://localhost:9090/api/utilisateur/tous"
+      );
+      const sortedData = response.data.sort(
+        (a, b) => a.idUtilisateur - b.idUtilisateur
+      );
       setUtilisateurs(sortedData);
       setFilteredUtilisateurs(sortedData);
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || "Impossible de charger les utilisateurs";
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.error || "Impossible de charger les utilisateurs";
       Swal.fire("Erreur", errorMessage, "error");
-      console.error("Erreur fetchUtilisateurs:", error);
     }
   };
 
@@ -46,7 +53,6 @@ const Utilisateur = () => {
     setFilteredUtilisateurs(filtered);
   }, [search, utilisateurs]);
 
-  // Vérifier le mot de passe admin avant une action
   const verifierAdmin = async () => {
     const { value: formValues } = await Swal.fire({
       title: "Vérification Admin",
@@ -57,34 +63,38 @@ const Utilisateur = () => {
       showCancelButton: true,
       confirmButtonText: "Vérifier",
       cancelButtonText: "Annuler",
-      preConfirm: () => {
-        return {
-          email: document.getElementById("swal-input1").value,
-          mdp: document.getElementById("swal-input2").value,
-        };
-      },
+      preConfirm: () => ({
+        email: document.getElementById("swal-input1").value,
+        mdp: document.getElementById("swal-input2").value,
+      }),
     });
 
     if (formValues) {
       try {
-        const response = await axios.post("http://localhost:9090/api/utilisateur/verifier-admin", {
-          email: formValues.email,
-          mdp: formValues.mdp,
-        });
-        return response.data.valid; // true si admin valide, false sinon
-      } catch (error) {
-        Swal.fire("Erreur", "Erreur lors de la vérification", error);
+        const response = await axios.post(
+          "http://localhost:9090/api/utilisateur/verifier-admin",
+          {
+            email: formValues.email,
+            mdp: formValues.mdp,
+          }
+        );
+        return response.data.valid;
+      } catch {
+        Swal.fire("Erreur", "Erreur lors de la vérification", "error");
         return false;
       }
     }
-    return false; // Annulé ou invalide
+    return false;
   };
 
-  // Ouvrir le modal après vérification admin
   const handleShowModal = async (utilisateur = null) => {
     const isAdminValid = await verifierAdmin();
     if (!isAdminValid) {
-      Swal.fire("Accès refusé", "Mot de passe admin incorrect ou annulé", "error");
+      Swal.fire(
+        "Accès refusé",
+        "Mot de passe admin incorrect ou annulé",
+        "error"
+      );
       return;
     }
 
@@ -93,7 +103,13 @@ const Utilisateur = () => {
       setCurrentUtilisateur({ ...utilisateur, mdp: "" });
     } else {
       setIsEdit(false);
-      setCurrentUtilisateur({ idUtilisateur: null, nom: "", email: "", mdp: "", role: "CAISSIER" });
+      setCurrentUtilisateur({
+        idUtilisateur: null,
+        nom: "",
+        email: "",
+        mdp: "",
+        role: "CAISSIER",
+      });
     }
     setShowModal(true);
   };
@@ -102,26 +118,77 @@ const Utilisateur = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "nom") {
+      // 🔹 Autoriser uniquement les lettres (majuscules/minuscules) et espaces
+      const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]*$/;
+
+      if (!regex.test(value)) {
+        Swal.fire(
+          "Erreur",
+          "Le nom ne doit contenir que des lettres et des espaces (pas de caractères spéciaux).",
+          "error"
+        );
+        return;
+      }
+    }
+
     setCurrentUtilisateur((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Vérifie le nom (aucun chiffre, aucun caractère spécial)
+    const regexNom = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]*$/;
+    if (!regexNom.test(currentUtilisateur.nom)) {
+      Swal.fire(
+        "Erreur",
+        "Le nom ne doit contenir que des lettres et des espaces.",
+        "error"
+      );
+      return;
+    }
+
+    // Vérifie la longueur du mot de passe
+    if (!isEdit || (isEdit && currentUtilisateur.mdp.trim() !== "")) {
+      if (currentUtilisateur.mdp.length < 8) {
+        Swal.fire(
+          "Erreur",
+          "Le mot de passe doit contenir au moins 8 caractères.",
+          "error"
+        );
+        return;
+      }
+    }
+
     try {
+      let dataToSend = { ...currentUtilisateur };
+
+      // Si on modifie et que le mot de passe est vide, on ne l’envoie pas
+      if (isEdit && !currentUtilisateur.mdp.trim()) {
+        delete dataToSend.mdp;
+      }
+
       if (isEdit) {
         await axios.put(
           `http://localhost:9090/api/utilisateur/modifier/${currentUtilisateur.idUtilisateur}`,
-          currentUtilisateur
+          dataToSend
         );
         Swal.fire("Succès", "Utilisateur modifié avec succès", "success");
       } else {
-        await axios.post("http://localhost:9090/api/utilisateur/ajouter", currentUtilisateur);
+        await axios.post(
+          "http://localhost:9090/api/utilisateur/ajouter",
+          dataToSend
+        );
         Swal.fire("Succès", "Utilisateur ajouté avec succès", "success");
       }
+
       fetchUtilisateurs();
       handleCloseModal();
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Une erreur est survenue";
+      const errorMessage =
+        error.response?.data?.error || "Une erreur est survenue";
       Swal.fire("Erreur", errorMessage, "error");
     }
   };
@@ -129,7 +196,11 @@ const Utilisateur = () => {
   const handleDelete = async (id) => {
     const isAdminValid = await verifierAdmin();
     if (!isAdminValid) {
-      Swal.fire("Accès refusé", "Mot de passe admin incorrect ou annulé", "error");
+      Swal.fire(
+        "Accès refusé",
+        "Mot de passe admin incorrect ou annulé",
+        "error"
+      );
       return;
     }
 
@@ -143,23 +214,30 @@ const Utilisateur = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(`http://localhost:9090/api/utilisateur/supprimer/${id}`);
-          Swal.fire("Supprimé", response.data.message || "Utilisateur supprimé avec succès", "success");
+          const response = await axios.delete(
+            `http://localhost:9090/api/utilisateur/supprimer/${id}`
+          );
+          Swal.fire(
+            "Supprimé",
+            response.data.message || "Utilisateur supprimé avec succès",
+            "success"
+          );
           fetchUtilisateurs();
-        } catch (error) {
-          const errorMessage = error.response?.data?.error || "Impossible de supprimer l'utilisateur";
+        } catch (err) {
+          const errorMessage =
+            err.response?.data?.error ||
+            "Impossible de supprimer l'utilisateur";
           Swal.fire("Erreur", errorMessage, "error");
-          console.error("Erreur handleDelete:", error);
         }
       }
     });
   };
 
   const columns = [
-    { name: "ID", selector: (row) => row.idUtilisateur, sortable: true, sortField: "idUtilisateur" },
-    { name: "Nom", selector: (row) => row.nom, sortable: true, sortField: "nom" },
-    { name: "Email", selector: (row) => row.email, sortable: true, sortField: "email" },
-    { name: "Rôle", selector: (row) => row.role, sortable: true, sortField: "role" },
+    { name: "ID", selector: (row) => row.idUtilisateur, sortable: true },
+    { name: "Nom", selector: (row) => row.nom, sortable: true },
+    { name: "Email", selector: (row) => row.email, sortable: true },
+    { name: "Rôle", selector: (row) => row.role, sortable: true },
     {
       name: "Actions",
       cell: (row) => (
@@ -188,6 +266,7 @@ const Utilisateur = () => {
             <BsPlusCircleFill className="me-2" /> Ajouter Utilisateur
           </Button>
         </Card.Header>
+
         <Card.Body>
           <Form.Group className="mb-3">
             <Form.Control
@@ -197,14 +276,13 @@ const Utilisateur = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </Form.Group>
+
           <DataTable
             columns={columns}
             data={filteredUtilisateurs}
             pagination
             highlightOnHover
             striped
-            defaultSortFieldId={1}
-            defaultSortAsc={true}
             noDataComponent="Aucun utilisateur trouvé"
           />
         </Card.Body>
@@ -212,8 +290,11 @@ const Utilisateur = () => {
 
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>{isEdit ? "Modifier Utilisateur" : "Ajouter Utilisateur"}</Modal.Title>
+          <Modal.Title>
+            {isEdit ? "Modifier Utilisateur" : "Ajouter Utilisateur"}
+          </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
@@ -223,9 +304,14 @@ const Utilisateur = () => {
                 name="nom"
                 value={currentUtilisateur.nom}
                 onChange={handleInputChange}
+                onKeyPress={(e) => {
+                  const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ\s]$/;
+                  if (!regex.test(e.key)) e.preventDefault();
+                }}
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -236,17 +322,33 @@ const Utilisateur = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Mot de passe</Form.Label>
-              <Form.Control
-                type="password"
-                name="mdp"
-                value={currentUtilisateur.mdp}
-                onChange={handleInputChange}
-                placeholder={isEdit ? "Laissez vide pour ne pas modifier" : ""}
-                required={!isEdit}
-              />
+              <InputGroup>
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  name="mdp"
+                  value={currentUtilisateur.mdp}
+                  onChange={handleInputChange}
+                  placeholder={
+                    isEdit ? "Laissez vide pour ne pas modifier" : ""
+                  }
+                  required={!isEdit}
+                />
+                <Button
+                  variant="outline-secondary"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputGroup>
+              <Form.Text className="text-muted">
+                Le mot de passe doit contenir au moins 8 caractères.
+              </Form.Text>
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Rôle</Form.Label>
               <Form.Select
@@ -258,6 +360,7 @@ const Utilisateur = () => {
                 <option value="ADMIN">Admin</option>
               </Form.Select>
             </Form.Group>
+
             <Button variant="primary" type="submit">
               {isEdit ? "Modifier" : "Ajouter"}
             </Button>

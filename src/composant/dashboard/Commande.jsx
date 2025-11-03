@@ -132,7 +132,7 @@ function Commande() {
       );
       console.log("Réponse brute de /api/commande/toutes:", response.data);
       const commandesEnCours = response.data.filter(
-        (commande) => commande.statut === "EN_COURS"
+        (commande) => commande.statut === "EN_COURS" // || commande.statut === "VALIDEE"
       );
       setCommandes(commandesEnCours || []);
       setFilteredCommandes(commandesEnCours || []);
